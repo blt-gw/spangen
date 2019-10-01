@@ -19,9 +19,14 @@ java_library(
 java_binary(
     name = "ObfuscatorServer",
     srcs = ["ObfuscatorServer.java"],
+    resources = [
+        "//src/main/resources:logging_conf"
+    ],
     runtime_deps = [
         "@maven//:io_opencensus_opencensus_contrib_agent",
         "@maven//:io_opencensus_opencensus_impl",
+        "@maven//:org_apache_logging_log4j_log4j_slf4j_impl",
+        "@maven//:org_apache_logging_log4j_log4j_core",
     ],
     deps = [
         "//src/main/proto/obfuscator:lib",

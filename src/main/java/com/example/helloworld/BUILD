@@ -4,6 +4,11 @@ java_binary(
     runtime_deps = [
         "@maven//:io_opencensus_opencensus_contrib_agent",
         "@maven//:io_opencensus_opencensus_impl",
+        "@maven//:org_apache_logging_log4j_log4j_slf4j_impl",
+        "@maven//:org_apache_logging_log4j_log4j_core",
+    ],
+    resources = [
+        "//src/main/resources:logging_conf"
     ],
     deps = [
         "//src/main/java/com/example/obfuscator:client",
