@@ -12,7 +12,7 @@ bazel build //src/main/java/com/example/helloworld:HelloWorldServer
 
 pushd "${__root}"
 
-AGENT=`find bazel-bin/src/main/java/com/example/obfuscator/ObfuscatorServer.runfiles -name 'opencensus-contrib-agent-*.jar' | head -n1`
+AGENT=`find bazel-bin/src/main/java/com/example/helloworld/HelloWorldServer.runfiles -name 'opencensus-contrib-agent-*.jar' | head -n1`
 
 ${__root}/bazel-bin/src/main/java/com/example/helloworld/HelloWorldServer --jvm_flag="-javaagent:${AGENT}"
 
