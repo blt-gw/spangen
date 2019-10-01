@@ -118,9 +118,12 @@ public class HelloWorldServer extends AbstractHandler {
             AsyncContext async = request.startAsync();
             ServletOutputStream out = response.getOutputStream();
             ObfuscatorClient client = this.client;
+            io.grpc.Context context = io.grpc.Context.current();
             out.setWriteListener(new WriteListener() {
                 @Override
                 public void onWritePossible() throws IOException {
+                    Context previousContext = context.attach();
+                    try {
                     response.setHeader("content-type", "application/json");
                     JsonFactory jfactory = new JsonFactory();
                     JsonGenerator jGenerator = jfactory.createGenerator(out, JsonEncoding.UTF8);
@@ -163,6 +166,9 @@ public class HelloWorldServer extends AbstractHandler {
                     jGenerator.close();
                     response.setStatus(200);
                     async.complete();
+                    } finally {
+                        context.detach(previousContext);
+                    }
                 }
 
                 @Override
