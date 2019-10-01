@@ -5,6 +5,7 @@ import com.example.obfuscator.ReverseResponse;
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import io.grpc.Context;
 import io.grpc.stub.StreamObserver;
 import io.opencensus.contrib.grpc.metrics.RpcViews;
 import io.opencensus.contrib.http.servlet.OcHttpServletFilter;
@@ -124,48 +125,48 @@ public class HelloWorldServer extends AbstractHandler {
                 public void onWritePossible() throws IOException {
                     Context previousContext = context.attach();
                     try {
-                    response.setHeader("content-type", "application/json");
-                    JsonFactory jfactory = new JsonFactory();
-                    JsonGenerator jGenerator = jfactory.createGenerator(out, JsonEncoding.UTF8);
-                    jGenerator.writeStartObject();
-                    jGenerator.writeFieldName("characters");
-                    jGenerator.writeStartArray();
+                        response.setHeader("content-type", "application/json");
+                        JsonFactory jfactory = new JsonFactory();
+                        JsonGenerator jGenerator = jfactory.createGenerator(out, JsonEncoding.UTF8);
+                        jGenerator.writeStartObject();
+                        jGenerator.writeFieldName("characters");
+                        jGenerator.writeStartArray();
 
-                    final CountDownLatch streamAlive = new CountDownLatch(1);
+                        final CountDownLatch streamAlive = new CountDownLatch(1);
 
-                    StreamObserver<ReverseResponse> streamObserver = new StreamObserver<ReverseResponse>() {
-                        @Override
-                        public void onNext(final ReverseResponse value) {
-                            assert (out.isReady());
-                            try {
-                                jGenerator.writeString(value.getChar());
-                            } catch (IOException ex) {
-                                throw new RuntimeException(ex);
+                        StreamObserver<ReverseResponse> streamObserver = new StreamObserver<ReverseResponse>() {
+                            @Override
+                            public void onNext(final ReverseResponse value) {
+                                assert (out.isReady());
+                                try {
+                                    jGenerator.writeString(value.getChar());
+                                } catch (IOException ex) {
+                                    throw new RuntimeException(ex);
+                                }
                             }
-                        }
 
-                        @Override
-                        public void onError(final Throwable t) {
-                            getServletContext().log("Async Error", t);
-                        }
+                            @Override
+                            public void onError(final Throwable t) {
+                                getServletContext().log("Async Error", t);
+                            }
 
-                        @Override
-                        public void onCompleted() {
-                            streamAlive.countDown();
-                        }
-                    };
-                    client.reverse("hello, world", streamObserver);
+                            @Override
+                            public void onCompleted() {
+                                streamAlive.countDown();
+                            }
+                        };
+                        client.reverse("hello, world", streamObserver);
 
-                    try {
-                        streamAlive.await();
-                    } catch (InterruptedException ex) {
-                        throw new RuntimeException(ex);
-                    }
-                    jGenerator.writeEndArray();
-                    jGenerator.writeEndObject();
-                    jGenerator.close();
-                    response.setStatus(200);
-                    async.complete();
+                        try {
+                            streamAlive.await();
+                        } catch (InterruptedException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                        jGenerator.writeEndArray();
+                        jGenerator.writeEndObject();
+                        jGenerator.close();
+                        response.setStatus(200);
+                        async.complete();
                     } finally {
                         context.detach(previousContext);
                     }
