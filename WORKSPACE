@@ -64,6 +64,8 @@ maven_install(
         "org.eclipse.jetty:jetty-servlet:9.4.18.v20190429",
         "org.eclipse.jetty:jetty-util:9.4.18.v20190429",
         "javax.servlet:javax.servlet-api:3.1.0",
+        "org.apache.logging.log4j:log4j-slf4j-impl:2.12.1",
+        "org.apache.logging.log4j:log4j-core:2.12.1",
     ],
     override_targets = IO_GRPC_GRPC_JAVA_OVERRIDE_TARGETS,
     fetch_sources = True,

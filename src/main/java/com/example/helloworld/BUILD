@@ -1,17 +1,23 @@
 java_binary(
     name = "HelloWorldServer",
     srcs = ["HelloWorldServer.java"],
+    resources = [
+        "//src/main/resources:logging_conf",
+    ],
     runtime_deps = [
         "@maven//:io_opencensus_opencensus_contrib_agent",
         "@maven//:io_opencensus_opencensus_impl",
+        "@maven//:org_apache_logging_log4j_log4j_core",
+        "@maven//:org_apache_logging_log4j_log4j_slf4j_impl",
     ],
     deps = [
         "//src/main/java/com/example/obfuscator:client",
         "//src/main/proto/obfuscator:obfuscator_java_proto",
         "//src/main/proto/obfuscator:obfuscator_proto",
+        "@io_grpc_grpc_java//context",
         "@io_grpc_grpc_java//core",
-        "@io_grpc_grpc_java//stub",
         "@io_grpc_grpc_java//netty",
+        "@io_grpc_grpc_java//stub",
         "@maven//:com_fasterxml_jackson_core_jackson_core",
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
         "@maven//:com_google_guava_guava",

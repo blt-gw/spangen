@@ -12,6 +12,8 @@ bazel build //src/main/java/com/example/obfuscator:ObfuscatorServer
 
 pushd "${__root}"
 
-${__root}/bazel-bin/src/main/java/com/example/obfuscator/ObfuscatorServer
+AGENT=`find bazel-bin/src/main/java/com/example/obfuscator/ObfuscatorServer.runfiles -name 'opencensus-contrib-agent-*.jar' | head -n1`
+
+${__root}/bazel-bin/src/main/java/com/example/obfuscator/ObfuscatorServer --jvm_flag="-javaagent:${AGENT}"
 
 popd
