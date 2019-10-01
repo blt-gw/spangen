@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option java_outer_classname = "ObfuscatorProtos";
+option java_multiple_files = true;
+
+package com.example.obfuscator;
+
+message ReverseRequest {
+    string msg = 1;
+}
+
+message ReverseResponse {
+    string char = 1;
+}
+
+service Obfuscator {
+    rpc Reverse (ReverseRequest) returns (stream ReverseResponse) {
+    }
+}
