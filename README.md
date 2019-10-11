@@ -24,35 +24,30 @@ All but the last service are sending traces directly to the jaeger collector run
 being that they're embedded in an istio mesh, the mesh is sending traces to the collector as well. You can confirm 
 that `helloworld` is working as expected by doing the following:
 
-
-To examine the traces do the following:
-
-```
+First, forward the `helloworld` external port to your localhost:
 
 ```
+> kubectl -nspangen port-forward svc/helloworld 8080:8080
+Forwarding from 127.0.0.1:8080 -> 8080
+Forwarding from [::1]:8080 -> 8080
+Handling connection for 8080
+```
 
-This forwards the query port to your local machine, which you can then visit at http://localhost:16686. What you
-_should_ see are traces connected from `helloworld -> obfuscator` with some mesh in between but this is not happening. 
-When I examine the UI I see only a single, rootless trace apparently from `helloworld`. 
+and from your local machine:
 
 ```
-> curl -vv http://localhost:8080
-* Rebuilt URL to: http://localhost:8080/
-*   Trying ::1...
-* TCP_NODELAY set
-* Connected to localhost (::1) port 8080 (#0)
-> GET / HTTP/1.1
-> Host: localhost:8080
-> User-Agent: curl/7.54.0
-> Accept: */*
->
-< HTTP/1.1 200 OK
-< Date: Tue, 01 Oct 2019 00:56:53 GMT
-< Content-Type: application/json
-< Content-Length: 64
-< Server: Jetty(9.4.18.v20190429)
-<
-* Connection #0 to host localhost left intact
+> curl localhost:8080
 {"characters":["d","l","r","o","w"," ",",","o","l","l","e","h"]}
 ```
 
+Now, let's take a look at the system traces. Forward jaeger query to your localhost:
+
+```
+> kubectl -nobservability port-forward svc/jaeger-query 16686:16686
+Forwarding from 127.0.0.1:16686 -> 16686
+Forwarding from [::1]:16686 -> 16686
+```
+
+Now visit at http://localhost:16686. What you _should_ see are traces connected from `helloworld -> obfuscator` 
+with some mesh in between but this is not happening. When I examine the UI I see mesh trashes that begin at `benchmarker`
+but don't dip all the way down to `obfuscator`. 

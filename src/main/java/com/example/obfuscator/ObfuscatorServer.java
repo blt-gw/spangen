@@ -1,5 +1,8 @@
 package com.example.obfuscator;
 
+import com.google.common.base.Preconditions;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
@@ -15,6 +18,7 @@ import io.opencensus.trace.config.TraceConfig;
 import io.opencensus.trace.samplers.Samplers;
 import io.prometheus.client.exporter.HTTPServer;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.logging.Logger;
 
@@ -25,13 +29,17 @@ public class ObfuscatorServer {
     private HTTPServer prometheusServer;
 
     public static void main(String[] args) throws IOException, InterruptedException {
+        File confFile = new File(args[0]);
+        Preconditions.checkArgument(confFile.canRead(), "unable to read configuration file at given path");
+        Config conf = ConfigFactory.parseFile(confFile);
+
         ObfuscatorServer obfuscatorServer = new ObfuscatorServer();
 
-        obfuscatorServer.start();
+        obfuscatorServer.start(conf.getString("jaeger.thrift_endpoint"), conf.getString("jaeger.service_name"));
         obfuscatorServer.awaitTermination();
     }
 
-    private void start() throws IOException, InterruptedException {
+    private void start(String endpoint, String serviceName) throws IOException, InterruptedException {
         RpcViews.registerAllGrpcViews();
 
         // Register Prometheus exporters and export metrics to a Prometheus HTTPServer.
@@ -47,8 +55,8 @@ public class ObfuscatorServer {
 
         JaegerTraceExporter.createAndRegister(
             JaegerExporterConfiguration.builder()
-                                       .setThriftEndpoint("http://jaeger-collector.observability:14268/api/traces")
-                                       .setServiceName("ObfuscatorServer")
+                                       .setThriftEndpoint(endpoint)
+                                       .setServiceName(serviceName)
                                        .build()
         );
 

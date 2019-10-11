@@ -35,6 +35,7 @@ java_binary(
         "@io_grpc_grpc_java//core",
         "@io_grpc_grpc_java//stub",
         "@io_grpc_grpc_java//netty",
+        "@maven//:com_typesafe_config",
         "@maven//:com_google_guava_guava",
         "@maven//:io_opencensus_opencensus_api",
         "@maven//:io_opencensus_opencensus_contrib_grpc_metrics",

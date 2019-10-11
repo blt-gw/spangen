@@ -9,4 +9,5 @@ COPY scratch/ObfuscatorServer /ObfuscatorServer
 COPY scratch/ObfuscatorServer.runfiles /ObfuscatorServer.runfiles
 RUN rm -rf /ObfuscatorServer.runfiles/local_jdk && ln -sf /usr/local/openjdk-8 /ObfuscatorServer.runfiles/local_jdk
 
-ENTRYPOINT ["/entrypoint"]
+COPY default.conf "/etc/obfuscator.conf"
+ENTRYPOINT ["/entrypoint", "/etc/obfuscator.conf"]

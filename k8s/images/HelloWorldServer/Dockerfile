@@ -9,4 +9,5 @@ COPY scratch/HelloWorldServer /HelloWorldServer
 COPY scratch/HelloWorldServer.runfiles /HelloWorldServer.runfiles
 RUN rm -rf /HelloWorldServer.runfiles/local_jdk && ln -sf /usr/local/openjdk-8 /HelloWorldServer.runfiles/local_jdk
 
-ENTRYPOINT ["/entrypoint"]
+COPY default.conf "/etc/helloworld.conf"
+ENTRYPOINT ["/entrypoint", "/etc/helloworld.conf"]

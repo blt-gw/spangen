@@ -5,6 +5,9 @@ import com.example.obfuscator.ReverseResponse;
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.google.common.base.Preconditions;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import io.grpc.Context;
 import io.grpc.stub.StreamObserver;
 import io.opencensus.contrib.grpc.metrics.RpcViews;
@@ -31,6 +34,7 @@ import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.io.IOException;
 import java.util.EnumSet;
 import java.util.concurrent.CountDownLatch;
@@ -54,7 +58,7 @@ public class HelloWorldServer extends AbstractHandler {
         HTTPServer prometheusServer = new HTTPServer(9090, true);
     }
 
-    private static void initTracing() {
+    private static void initTracing(String endpoint, String serviceName) {
         TraceConfig traceConfig = Tracing.getTraceConfig();
 
         // default sampler is set to Samplers.alwaysSample() for demonstration. In production
@@ -66,21 +70,25 @@ public class HelloWorldServer extends AbstractHandler {
         // run Jaeger
         JaegerTraceExporter.createAndRegister(
             JaegerExporterConfiguration.builder()
-                                       .setThriftEndpoint("http://jaeger-collector.observability:14268/api/traces")
-                                       .setServiceName("hellworldserver")
+                                       .setThriftEndpoint(endpoint)
+                                       .setServiceName(serviceName)
                                        .build()
         );
     }
 
     public static void main(String[] args) throws Exception {
-        initTracing();
+        File confFile = new File(args[0]);
+        Preconditions.checkArgument(confFile.canRead(), "unable to read configuration file at given path");
+        Config conf = ConfigFactory.parseFile(confFile);
+
+        initTracing(conf.getString("jaeger.thrift_endpoint"), conf.getString("jaeger.service_name"));
         initStatsExporter();
 
         Server server = new Server(8080);
         ServletContextHandler contextHandler = new ServletContextHandler(ServletContextHandler.SESSIONS);
         contextHandler.setContextPath("/");
-        contextHandler.setInitParameter("obfuscator_host", "localhost");
-        contextHandler.setInitParameter("obfuscator_port", Integer.toString(2019));
+        contextHandler.setInitParameter("obfuscator_host", conf.getString("obfuscator.host"));
+        contextHandler.setInitParameter("obfuscator_port", conf.getString("obfuscator.port"));
 
         contextHandler.addServlet(HelloServlet.class, "/");
 
@@ -110,9 +118,12 @@ public class HelloWorldServer extends AbstractHandler {
 
         public void init(ServletConfig config) throws ServletException {
             super.init(config);
-            String numgenHost = getServletContext().getInitParameter("obfuscator_host");
-            int numgenPort = Integer.parseInt(getServletContext().getInitParameter("obfuscator_port"));
-            this.client = ObfuscatorClient.builder().setServerHost(numgenHost).setServerPort(numgenPort).build();
+            String obfuscatorHost = getServletContext().getInitParameter("obfuscator_host");
+            int obfuscatorPort = Integer.parseInt(getServletContext().getInitParameter("obfuscator_port"));
+            this.client = ObfuscatorClient.builder()
+                                          .setServerHost(obfuscatorHost)
+                                          .setServerPort(obfuscatorPort)
+                                          .build();
         }
 
         protected void doGet(
