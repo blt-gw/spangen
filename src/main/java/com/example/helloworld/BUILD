@@ -21,6 +21,7 @@ java_binary(
         "@maven//:com_fasterxml_jackson_core_jackson_core",
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
         "@maven//:com_google_guava_guava",
+        "@maven//:com_typesafe_config",
         "@maven//:io_opencensus_opencensus_api",
         "@maven//:io_opencensus_opencensus_contrib_grpc_metrics",
         "@maven//:io_opencensus_opencensus_contrib_http_servlet",

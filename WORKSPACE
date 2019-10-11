@@ -66,6 +66,7 @@ maven_install(
         "javax.servlet:javax.servlet-api:3.1.0",
         "org.apache.logging.log4j:log4j-slf4j-impl:2.12.1",
         "org.apache.logging.log4j:log4j-core:2.12.1",
+        "com.typesafe:config:1.3.4",
     ],
     override_targets = IO_GRPC_GRPC_JAVA_OVERRIDE_TARGETS,
     fetch_sources = True,

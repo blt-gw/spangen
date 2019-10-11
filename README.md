@@ -1,40 +1,39 @@
 # Spangen
 
-Demonstration project to show that spans are disconnected when bridging Jetty HTTP -> gRPC.
+Demonstration project to show that spans are disconnected when bridging Jetty HTTP -> gRPC in istio. 
 
 ## Steps to Reproduce
 
-To reproduce this issue we need to start three pieces of software. The first is a local jaeger:
+To reproduce this issue we need to boot the project minikube. You may do that by running the following:
 
 ```
-docker run -d --name jaeger \
-  -e COLLECTOR_ZIPKIN_HTTP_PORT=9411 \
-  -p 5775:5775/udp \
-  -p 6831:6831/udp \
-  -p 6832:6832/udp \
-  -p 5778:5778 \
-  -p 16686:16686 \
-  -p 14268:14268 \
-  -p 9411:9411 \
-  jaegertracing/all-in-one:1.8
+./k8s/bootstrap.sh
 ```
 
-This command will start a localhost jaeger, the UI of which you can access at http://localhost:16686. More details [here](https://www.jaegertracing.io/docs/1.8/getting-started/#all-in-one).
+This will create a new minikube on your system called `spangen`. You will need to have minikube set up for your environment
+already. See instructions [here](https://kubernetes.io/docs/tasks/tools/install-minikube/) if you have not got minikube
+installed. 
 
-Start `obfuscator`, the project gRPC service whose protocol is defined in [src/main/proto/obfuscator/obfuscator.proto]:
+Once you have `spangen` minikube booted you will see three services deployed in the `spangen` namespace:
+
+ * `obfuscator` : a gRPC service that reverses whatever you send it
+ * `helloworld` : an HTTP service that sends 'hello, world' to `obfuscator` and then wraps the result up in json
+ * `benchmarker` : a service to generate load against `helloworld`
+ 
+All but the last service are sending traces directly to the jaeger collector running in `observability` namespace and,
+being that they're embedded in an istio mesh, the mesh is sending traces to the collector as well. You can confirm 
+that `helloworld` is working as expected by doing the following:
+
+
+To examine the traces do the following:
 
 ```
-./bin/run_obfuscator
-```
-
-This will start the server on port 2019, listening for local connections. Now start `helloworld`, an jetty server that
-sends the string "hello, world" to `obfuscator` to be reversed, prior to rolling it up into json:
 
 ```
-./bin/run_helloworld
-```
 
-The server `helloworld` will be running on 8080. You can confirm that the whole setup works like so:
+This forwards the query port to your local machine, which you can then visit at http://localhost:16686. What you
+_should_ see are traces connected from `helloworld -> obfuscator` with some mesh in between but this is not happening. 
+When I examine the UI I see only a single, rootless trace apparently from `helloworld`. 
 
 ```
 > curl -vv http://localhost:8080
@@ -57,6 +56,3 @@ The server `helloworld` will be running on 8080. You can confirm that the whole 
 {"characters":["d","l","r","o","w"," ",",","o","l","l","e","h"]}
 ```
 
-Both `helloworld` and `obfuscator` are configured to trace all requests, so we should be able to go Jaeger and see the 
-trace span both servers. When I query Jaeger I find that there is one trace for `helloworld: /` and another for 
-`helloworldserver: Sent.com.example.obfuscator.Obfuscator.Reverse`, each having distinct trace ids.  

@@ -36,6 +36,8 @@ import java.util.EnumSet;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
 
+import static io.opencensus.contrib.http.servlet.OcHttpServletFilter.OC_TRACE_PROPAGATOR;
+
 /**
  * Sample application that shows how to instrument jetty server.
  */
@@ -49,7 +51,7 @@ public class HelloWorldServer extends AbstractHandler {
         // Register Prometheus exporters and export metrics to a Prometheus HTTPServer.
         // Refer to https://prometheus.io/ to run Prometheus Server.
         PrometheusStatsCollector.createAndRegister();
-        HTTPServer prometheusServer = new HTTPServer(9091, true);
+        HTTPServer prometheusServer = new HTTPServer(9090, true);
     }
 
     private static void initTracing() {
@@ -58,13 +60,13 @@ public class HelloWorldServer extends AbstractHandler {
         // default sampler is set to Samplers.alwaysSample() for demonstration. In production
         // or in high QPS environment please use default sampler.
         traceConfig.updateActiveTraceParams(
-            traceConfig.getActiveTraceParams().toBuilder().setSampler(Samplers.alwaysSample()).build());
+            traceConfig.getActiveTraceParams().toBuilder().setSampler(Samplers.probabilitySampler(0.01)).build());
 
         // Register Jaeger Tracing. Refer to https://www.jaegertracing.io/docs/1.8/getting-started/ to
         // run Jaeger
         JaegerTraceExporter.createAndRegister(
             JaegerExporterConfiguration.builder()
-                                       .setThriftEndpoint("http://127.0.0.1:14268/api/traces")
+                                       .setThriftEndpoint("http://jaeger-collector.observability:14268/api/traces")
                                        .setServiceName("hellworldserver")
                                        .build()
         );
@@ -84,6 +86,7 @@ public class HelloWorldServer extends AbstractHandler {
 
         contextHandler.getServletHandler().addFilterWithMapping(
             OcHttpServletFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
+        contextHandler.setAttribute(OC_TRACE_PROPAGATOR, Tracing.getPropagationComponent().getB3Format());
 
         server.setHandler(contextHandler);
 

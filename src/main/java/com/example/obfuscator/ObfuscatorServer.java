@@ -43,11 +43,11 @@ public class ObfuscatorServer {
         // default sampler is set to Samplers.alwaysSample() for demonstration. In production
         // or in high QPS environment please use default sampler.
         traceConfig.updateActiveTraceParams(
-            traceConfig.getActiveTraceParams().toBuilder().setSampler(Samplers.alwaysSample()).build());
+            traceConfig.getActiveTraceParams().toBuilder().setSampler(Samplers.probabilitySampler(0.01)).build());
 
         JaegerTraceExporter.createAndRegister(
             JaegerExporterConfiguration.builder()
-                                       .setThriftEndpoint("http://127.0.0.1:14268/api/traces")
+                                       .setThriftEndpoint("http://jaeger-collector.observability:14268/api/traces")
                                        .setServiceName("ObfuscatorServer")
                                        .build()
         );
