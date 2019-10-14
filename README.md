@@ -51,3 +51,12 @@ Forwarding from [::1]:16686 -> 16686
 Now visit at http://localhost:16686. What you _should_ see are traces connected from `helloworld -> obfuscator` 
 with some mesh in between but this is not happening. When I examine the UI I see mesh trashes that begin at `benchmarker`
 but don't dip all the way down to `obfuscator`. 
+
+Here's the service list I see: ![service list](img/service-name-association-broken.png)
+
+Your list may vary a little depending on sampling since the minikube jaeger is only in-memory. I believe that anything 
+with the namespace in the service name is an istio originated trace. Clicking through to those finds no connection, 
+like so: ![benchmarker.spangen trace](img/no-connection-from-benchmarker.spangen.png) and: ![helloworld.spangen trace](img/no-traces-from-helloworld.spangen.png)
+
+The non-istio traces appear to be connected: ![traces from helloworld](img/traces-from-helloworld.png) and ![full trace no istio](img/full-trace-no-istio.png)
+
